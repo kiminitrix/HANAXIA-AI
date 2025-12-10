@@ -10,11 +10,6 @@ import rehypeHighlight from 'rehype-highlight';
 // Helper for collision-free IDs
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-// Generate random user identity for this session
-const SESSION_USER_ID = generateId();
-const SESSION_USER_NAME = `User ${Math.floor(Math.random() * 1000)}`;
-const SESSION_USER_COLOR = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#d946ef', '#f43f5e'][Math.floor(Math.random() * 8)];
-
 interface ChatInputProps {
   onSend: (text: string) => void;
   isLoading: boolean;
@@ -101,78 +96,40 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading, activeConversa
   );
 };
 
-const HanaxiaChat: React.FC = () => {
-  const [conversations, setConversations] = useState<Conversation[]>(() => {
-    const raw = localStorage.getItem('hanaxia-chats');
-    return raw ? JSON.parse(raw) : [{ id: 'init-chat', title: 'New Chat', messages: [] }];
-  });
-  const [activeId, setActiveId] = useState<string>(conversations[0].id);
+interface HanaxiaChatProps {
+  activeConversation: Conversation;
+  onUpdateConversation: (c: Conversation) => void;
+}
+
+const HanaxiaChat: React.FC<HanaxiaChatProps> = ({ activeConversation, onUpdateConversation }) => {
   const [isStreaming, setIsStreaming] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  const activeChat = conversations.find(c => c.id === activeId) || conversations[0];
-
-  useEffect(() => {
-    localStorage.setItem('hanaxia-chats', JSON.stringify(conversations));
-  }, [conversations]);
-
-  // Subscribe to real-time chat updates
-  useEffect(() => {
-    const unsubscribe = wsService.subscribe(
-      SocketEvents.CHAT_MESSAGE, 
-      (payload: SocketPayloads[SocketEvents.CHAT_MESSAGE]) => {
-        setConversations(prev => {
-          const exists = prev.some(c => c.id === payload.conversationId);
-          if (exists) {
-            return prev.map(c => {
-              if (c.id === payload.conversationId) {
-                if (c.messages.some(m => m.id === payload.message.id)) {
-                  return c;
-                }
-                return { ...c, messages: [...c.messages, payload.message] };
-              }
-              return c;
-            });
-          } else {
-            const newConv: Conversation = {
-              id: payload.conversationId,
-              title: payload.conversationTitle || 'Remote Chat',
-              messages: [payload.message]
-            };
-            return [newConv, ...prev];
-          }
-        });
-      }
-    );
-    return unsubscribe;
-  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [activeChat.messages, isStreaming]);
-
-  const updateActiveChat = (fn: (c: Conversation) => Conversation) => {
-    setConversations(prev => prev.map(c => c.id === activeId ? fn(c) : c));
-  };
+  }, [activeConversation.messages, isStreaming]);
 
   const handleSendMessage = async (text: string) => {
     if (!text.trim() || isStreaming) return;
 
     const userMsg: Message = { id: generateId(), role: 'user', text: text, time: Date.now() };
-    updateActiveChat(c => ({ ...c, messages: [...c.messages, userMsg] }));
+    
+    // Optimistic update
+    const updatedWithUser = { ...activeConversation, messages: [...activeConversation.messages, userMsg] };
+    onUpdateConversation(updatedWithUser);
     
     wsService.send(SocketEvents.CHAT_MESSAGE, {
-      conversationId: activeId,
-      conversationTitle: activeChat.title,
+      conversationId: activeConversation.id,
+      conversationTitle: activeConversation.title,
       message: userMsg
     });
 
     setIsStreaming(true);
 
     try {
-      const history = activeChat.messages.map(m => ({
+      const history = updatedWithUser.messages.map(m => ({
         role: m.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: m.text }]
       }));
@@ -182,41 +139,45 @@ const HanaxiaChat: React.FC = () => {
       const assistantId = generateId();
       const initialAssistantMsg: Message = { id: assistantId, role: 'assistant', text: '', time: Date.now() };
       
-      updateActiveChat(c => ({
-        ...c,
-        messages: [...c.messages, initialAssistantMsg]
-      }));
+      // Add empty assistant message
+      let currentConversationState = { 
+        ...updatedWithUser, 
+        messages: [...updatedWithUser.messages, initialAssistantMsg] 
+      };
+      onUpdateConversation(currentConversationState);
 
       let fullText = '';
       for await (const chunk of stream) {
         const content = chunk as GenerateContentResponse;
         if (content.text) {
           fullText += content.text;
-          setConversations(prev => prev.map(c => {
-            if (c.id !== activeId) return c;
-            
-            const updatedMessages = [...c.messages];
-            const lastMsgIndex = updatedMessages.findIndex(m => m.id === assistantId);
-            if (lastMsgIndex !== -1) {
-              updatedMessages[lastMsgIndex] = { ...updatedMessages[lastMsgIndex], text: fullText };
-            }
-            return { ...c, messages: updatedMessages };
-          }));
+          
+          // Update the last message in local updated state variable
+          const updatedMessages = [...currentConversationState.messages];
+          const lastIndex = updatedMessages.findIndex(m => m.id === assistantId);
+          if (lastIndex !== -1) {
+             updatedMessages[lastIndex] = { ...updatedMessages[lastIndex], text: fullText };
+          }
+          currentConversationState = { ...currentConversationState, messages: updatedMessages };
+          
+          // Propagate up
+          onUpdateConversation(currentConversationState);
         }
       }
 
       wsService.send(SocketEvents.CHAT_MESSAGE, {
-        conversationId: activeId,
-        conversationTitle: activeChat.title,
+        conversationId: activeConversation.id,
+        conversationTitle: activeConversation.title,
         message: { ...initialAssistantMsg, text: fullText }
       });
 
     } catch (error) {
       console.error("Chat error:", error);
-      updateActiveChat(c => ({
-        ...c,
-        messages: [...c.messages, { id: generateId(), role: 'assistant', text: "I apologize, but I encountered an error connecting to the service.", time: Date.now() }]
-      }));
+      const errorMsg: Message = { id: generateId(), role: 'assistant', text: "I apologize, but I encountered an error connecting to the service.", time: Date.now() };
+      onUpdateConversation({
+         ...activeConversation,
+         messages: [...activeConversation.messages, userMsg, errorMsg]
+      });
     } finally {
       setIsStreaming(false);
     }
@@ -224,9 +185,9 @@ const HanaxiaChat: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full relative">
-      <div className="flex-1 overflow-y-auto w-full" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto w-full custom-scrollbar" ref={scrollRef}>
         <div className="max-w-3xl mx-auto w-full px-4 pt-10 pb-4">
-          {activeChat.messages.length === 0 ? (
+          {activeConversation.messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center min-h-[50vh] animate-fade-in select-none">
                {/* Logo Center */}
                <div className="w-20 h-20 bg-purple-600 rounded-2xl flex items-center justify-center text-white text-5xl font-bold mb-8 shadow-2xl shadow-purple-900/50">
@@ -238,13 +199,13 @@ const HanaxiaChat: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-6">
-              {activeChat.messages.map((m) => (
+              {activeConversation.messages.map((m) => (
                 <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div 
-                    className={`max-w-[90%] md:max-w-[85%] px-5 py-4 rounded-2xl text-[15px] leading-7 ${
+                    className={`max-w-[90%] md:max-w-[85%] px-5 py-4 rounded-2xl text-[15px] leading-7 shadow-sm ${
                       m.role === 'user' 
                         ? 'bg-purple-600 text-white rounded-br-none dark:bg-white/10 dark:text-white' 
-                        : 'text-gray-800 dark:text-gray-200'
+                        : 'bg-white dark:bg-[#1a1a1a] text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-white/5'
                     }`}
                   >
                     {m.role === 'assistant' ? (
@@ -260,7 +221,7 @@ const HanaxiaChat: React.FC = () => {
                                if (isInline) return <code className="bg-gray-100 dark:bg-white/10 rounded px-1.5 py-0.5 text-xs font-mono" {...props}>{children}</code>;
                                return <code className={className} {...props}>{children}</code>;
                              },
-                             pre: ({node, ...props}) => <pre className="bg-gray-900 dark:bg-[#1e1e1e] text-white p-4 rounded-xl border border-gray-200 dark:border-white/5 overflow-x-auto" {...props} />
+                             pre: ({node, ...props}) => <pre className="bg-gray-900 dark:bg-[#0d0d0d] text-white p-4 rounded-xl border border-gray-200 dark:border-white/5 overflow-x-auto my-2" {...props} />
                            }}
                         >
                           {m.text}
@@ -281,7 +242,7 @@ const HanaxiaChat: React.FC = () => {
       <ChatInput 
         onSend={handleSendMessage} 
         isLoading={isStreaming} 
-        activeConversationId={activeId}
+        activeConversationId={activeConversation.id}
       />
     </div>
   );

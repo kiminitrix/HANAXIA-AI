@@ -7,7 +7,7 @@ import AgenticPlanner from './components/AgenticPlanner';
 import CalendarPlanner from './components/CalendarPlanner';
 import ImageGenerator from './components/ImageGenerator';
 import VideoGenerator from './components/VideoGenerator';
-import { AppRoute } from './types';
+import { AppRoute, Conversation, SocketEvents, SocketPayloads } from './types';
 import { wsService } from './services/websocketService';
 
 // Theme hook
@@ -35,21 +35,138 @@ export default function App() {
   const [route, setRoute] = useState<AppRoute>(AppRoute.CHAT);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Initialize WebSocket connection
+  // --- Chat State Management (Lifted from HanaxiaChat) ---
+  const [conversations, setConversations] = useState<Conversation[]>(() => {
+    const raw = localStorage.getItem('hanaxia-chats');
+    return raw ? JSON.parse(raw) : [{ id: 'init-chat', title: 'New Chat', messages: [] }];
+  });
+  const [activeId, setActiveId] = useState<string>(() => {
+     // Ensure activeId is valid
+     const raw = localStorage.getItem('hanaxia-chats');
+     const parsed = raw ? JSON.parse(raw) : [{ id: 'init-chat' }];
+     return parsed[0]?.id || 'init-chat';
+  });
+
+  // Persist chats
+  useEffect(() => {
+    localStorage.setItem('hanaxia-chats', JSON.stringify(conversations));
+  }, [conversations]);
+
+  // Subscribe to real-time chat updates at App level so we catch messages even if not on Chat route
   useEffect(() => {
     wsService.connect();
+    
+    const unsubscribe = wsService.subscribe(
+      SocketEvents.CHAT_MESSAGE, 
+      (payload: SocketPayloads[SocketEvents.CHAT_MESSAGE]) => {
+        setConversations(prev => {
+          const exists = prev.some(c => c.id === payload.conversationId);
+          if (exists) {
+            return prev.map(c => {
+              if (c.id === payload.conversationId) {
+                if (c.messages.some(m => m.id === payload.message.id)) {
+                  return c;
+                }
+                return { ...c, messages: [...c.messages, payload.message] };
+              }
+              return c;
+            });
+          } else {
+            const newConv: Conversation = {
+              id: payload.conversationId,
+              title: payload.conversationTitle || 'Remote Chat',
+              messages: [payload.message]
+            };
+            return [newConv, ...prev];
+          }
+        });
+      }
+    );
+    return unsubscribe;
   }, []);
+
+  // --- Handlers ---
+
+  const handleCreateNewSession = () => {
+    const newId = `${Date.now()}`;
+    const newChat: Conversation = { id: newId, title: 'New Chat', messages: [] };
+    setConversations(prev => [newChat, ...prev]);
+    setActiveId(newId);
+    setRoute(AppRoute.CHAT);
+    setIsSidebarOpen(false);
+  };
+
+  const handleDeleteChat = (id: string) => {
+    setConversations(prev => {
+      const filtered = prev.filter(c => c.id !== id);
+      if (filtered.length === 0) {
+        // Always keep at least one chat
+        const newId = `${Date.now()}`;
+        return [{ id: newId, title: 'New Chat', messages: [] }];
+      }
+      return filtered;
+    });
+    
+    // If we deleted the active chat, switch to the first available
+    if (activeId === id) {
+       setConversations(currentChats => {
+          // This runs after the state update above would apply, but inside the same render cycle logic
+          // safely grabbing the first one from the filtered list we just calculated conceptually
+          const filtered = currentChats.filter(c => c.id !== id);
+          if (filtered.length > 0) {
+             setActiveId(filtered[0].id);
+          } else {
+             // Fallback if we just created a new one in the prev setter
+             // We can't easily access the new ID here without refactoring.
+             // Simpler approach: useEffect to fix activeId if invalid.
+          }
+          return currentChats; // return unchanged, just used for logic
+       });
+    }
+  };
+
+  // Fix activeId if it points to a non-existent chat (e.g. after delete)
+  useEffect(() => {
+     if (!conversations.find(c => c.id === activeId)) {
+        if (conversations.length > 0) {
+           setActiveId(conversations[0].id);
+        }
+     }
+  }, [conversations, activeId]);
+
+
+  const handleRenameChat = (id: string, newTitle: string) => {
+    setConversations(prev => prev.map(c => c.id === id ? { ...c, title: newTitle } : c));
+  };
+
+  const handleClearHistory = () => {
+    if (confirm("Are you sure you want to delete all chat history? This cannot be undone.")) {
+       const newId = `${Date.now()}`;
+       setConversations([{ id: newId, title: 'New Chat', messages: [] }]);
+       setActiveId(newId);
+    }
+  };
+
+  const handleUpdateConversation = (updatedChat: Conversation) => {
+     setConversations(prev => prev.map(c => c.id === updatedChat.id ? updatedChat : c));
+  };
 
   // Render current route
   const renderContent = () => {
     switch (route) {
-      case AppRoute.CHAT: return <HanaxiaChat />;
+      case AppRoute.CHAT: 
+        return (
+          <HanaxiaChat 
+             activeConversation={conversations.find(c => c.id === activeId) || conversations[0]}
+             onUpdateConversation={handleUpdateConversation}
+          />
+        );
       case AppRoute.DOC: return <DocParser />;
       case AppRoute.AGENT: return <AgenticPlanner />;
       case AppRoute.CALENDAR: return <CalendarPlanner />;
       case AppRoute.IMAGE: return <ImageGenerator />;
       case AppRoute.VIDEO: return <VideoGenerator />;
-      default: return <HanaxiaChat />;
+      default: return <HanaxiaChat activeConversation={conversations[0]} onUpdateConversation={handleUpdateConversation} />;
     }
   };
 
@@ -72,6 +189,14 @@ export default function App() {
           setRoute={setRoute} 
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
+          // Chat Props
+          conversations={conversations}
+          activeId={activeId}
+          onSelectChat={(id) => { setActiveId(id); setRoute(AppRoute.CHAT); setIsSidebarOpen(false); }}
+          onNewSession={handleCreateNewSession}
+          onDeleteChat={handleDeleteChat}
+          onRenameChat={handleRenameChat}
+          onClearHistory={handleClearHistory}
         />
         
         {/* Main Content - Full width/height, scrollable internally */}
