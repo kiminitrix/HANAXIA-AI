@@ -108,7 +108,7 @@ const ImageGenerator: React.FC = () => {
                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
                      </svg>
                   </div>
-                  <h2 className="text-2xl font-medium text-gray-200">Create something amazing.</h2>
+                  <h2 className="text-2xl font-medium text-gray-800 dark:text-gray-200">Create something amazing.</h2>
                   <p className="text-gray-500 mt-2">Enter a prompt below to generate.</p>
                </div>
             )}
@@ -117,11 +117,11 @@ const ImageGenerator: React.FC = () => {
             {isLoading && (
                 <div className="flex flex-col items-center justify-center">
                     <div className="flex gap-8 justify-center w-full">
-                        <div className="w-[400px] h-[400px] rounded-2xl bg-white/5 animate-pulse flex items-center justify-center border border-white/10">
+                        <div className="w-[400px] h-[400px] rounded-2xl bg-gray-100 dark:bg-white/5 animate-pulse flex items-center justify-center border border-gray-200 dark:border-white/10">
                             <div className="text-purple-500 text-4xl animate-spin">{ICONS.loading}</div>
                         </div>
                     </div>
-                    <p className="mt-6 text-gray-400 font-medium">Dreaming up your image...</p>
+                    <p className="mt-6 text-gray-500 dark:text-gray-400 font-medium">Dreaming up your image...</p>
                 </div>
             )}
 
@@ -129,7 +129,7 @@ const ImageGenerator: React.FC = () => {
             {!isLoading && images.length > 0 && (
                <div className="flex flex-wrap justify-center items-center gap-8 w-full">
                   {images.map((src, i) => (
-                    <div key={i} className="group relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black max-w-[450px] w-full aspect-square transition-transform hover:scale-[1.02]">
+                    <div key={i} className="group relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-black max-w-[450px] w-full aspect-square transition-transform hover:scale-[1.02]">
                       <img src={src} alt={`Generated ${i}`} className="w-full h-full object-cover" />
                       
                       {/* Action Overlay */}
@@ -165,23 +165,23 @@ const ImageGenerator: React.FC = () => {
        <div className="max-w-3xl mx-auto w-full px-4 mb-6 z-10">
           {/* Reference Image Preview */}
           {refImage && (
-             <div className="bg-[#1a1a1a] rounded-t-2xl border-x border-t border-white/10 px-4 py-3 flex items-center justify-between animate-slide-up">
+             <div className="bg-white dark:bg-[#1a1a1a] rounded-t-2xl border-x border-t border-gray-200 dark:border-white/10 px-4 py-3 flex items-center justify-between animate-slide-up">
                 <div className="flex items-center gap-3">
-                   <div className="w-12 h-12 rounded-lg bg-white/5 border border-white/10 overflow-hidden relative group">
+                   <div className="w-12 h-12 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 overflow-hidden relative group">
                       <img 
                         src={`data:${refImage.mimeType};base64,${refImage.data}`} 
                         alt="Reference" 
                         className="w-full h-full object-cover"
                       />
                    </div>
-                   <div className="text-xs text-gray-400">
-                      <div className="font-semibold text-white">Reference Image</div>
+                   <div className="text-xs text-gray-500 dark:text-gray-400">
+                      <div className="font-semibold text-gray-900 dark:text-white">Reference Image</div>
                       <div>Used for structure & style</div>
                    </div>
                 </div>
                 <button 
                    onClick={clearRefImage}
-                   className="p-1 hover:bg-white/10 rounded-full text-gray-500 hover:text-white transition-colors"
+                   className="p-1 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -191,7 +191,7 @@ const ImageGenerator: React.FC = () => {
           )}
 
           {/* Aspect Ratio Pills */}
-          <div className={`bg-[#1a1a1a] border-x border-white/10 px-4 py-3 flex items-center gap-4 text-xs font-medium ${refImage ? 'border-t border-white/5' : 'rounded-t-2xl border-t'}`}>
+          <div className={`bg-white dark:bg-[#1a1a1a] border-x border-gray-200 dark:border-white/10 px-4 py-3 flex items-center gap-4 text-xs font-medium ${refImage ? 'border-t border-gray-100 dark:border-white/5' : 'rounded-t-2xl border-t'}`}>
              <div className="text-gray-500 flex items-center gap-1">
                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                  <path fillRule="evenodd" d="M1 11.27c0-.246.033-.492.099-.73l1.523-5.521A2.75 2.75 0 0 1 5.273 3h9.454a2.75 2.75 0 0 1 2.651 2.019l1.523 5.52c.066.239.099.485.099.732V15a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-3.73Zm3.068-5.852.651 2.36a.75.75 0 0 1-.726.95H3a.75.75 0 0 1-.75-.75v-.069c0-.041.003-.082.01-.122l.74-2.684a1.25 1.25 0 0 1 1.068-.315ZM14.12 3H5.273a2.75 2.75 0 0 0-2.651 2.019l-.366 1.326a2.254 2.254 0 0 0 1.708.884h11.472a2.25 2.25 0 0 0 1.708-.884l-.366-1.326A2.75 2.75 0 0 0 14.12 3ZM4.5 9.75a.75.75 0 0 0-.75.75V15c0 .414.336.75.75.75h11c.414 0 .75-.336.75-.75v-4.5a.75.75 0 0 0-.75-.75H4.5Z" clipRule="evenodd" />
@@ -206,7 +206,7 @@ const ImageGenerator: React.FC = () => {
                     className={`px-3 py-1 rounded-md transition-colors ${
                       aspectRatio === r 
                         ? 'bg-[#6366f1] text-white' 
-                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                        : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/10'
                     }`}
                   >
                     {r}
@@ -216,7 +216,7 @@ const ImageGenerator: React.FC = () => {
           </div>
 
           {/* Input Bar */}
-          <div className="bg-[#1a1a1a] rounded-b-3xl border border-white/10 shadow-xl flex items-center p-2 pr-2">
+          <div className="bg-white dark:bg-[#1a1a1a] rounded-b-3xl border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-xl flex items-center p-2 pr-2">
             <input 
               type="file" 
               ref={fileInputRef}
@@ -226,7 +226,7 @@ const ImageGenerator: React.FC = () => {
             />
             <button 
                onClick={() => fileInputRef.current?.click()}
-               className="p-3 text-gray-400 hover:text-white transition-colors"
+               className="p-3 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                title="Upload reference image"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
@@ -237,14 +237,14 @@ const ImageGenerator: React.FC = () => {
               value={prompt}
               onChange={e => setPrompt(e.target.value)}
               placeholder="Describe the image you want to generate..."
-              className="flex-1 bg-transparent py-3 px-2 outline-none text-gray-100 placeholder-gray-500"
+              className="flex-1 bg-transparent py-3 px-2 outline-none text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               onKeyDown={e => e.key === 'Enter' && handleGenerate()}
             />
              <button 
                onClick={handleGenerate}
                disabled={(!prompt.trim() && !refImage) || isLoading}
                className={`p-2 rounded-full transition-all ${
-                 (prompt.trim() || refImage) && !isLoading ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/10 text-gray-500'
+                 (prompt.trim() || refImage) && !isLoading ? 'bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200' : 'bg-gray-200 dark:bg-white/10 text-gray-400 dark:text-gray-500'
                }`}
              >
                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">

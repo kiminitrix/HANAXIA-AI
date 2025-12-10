@@ -9,11 +9,11 @@ interface TopBarProps {
 
 const TopBar: React.FC<TopBarProps> = ({ onToggle, isDark, onMenuClick }) => {
   return (
-    <header className="flex items-center justify-between px-4 py-3 bg-[#0a0a0a] border-b border-white/5">
+    <header className="flex items-center justify-between px-4 py-3 bg-white dark:bg-[#0a0a0a] border-b border-gray-200 dark:border-white/5 transition-colors duration-300">
       <div className="flex items-center gap-3">
         <button 
           onClick={onMenuClick}
-          className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+          className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
           aria-label="Open Menu"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -23,12 +23,12 @@ const TopBar: React.FC<TopBarProps> = ({ onToggle, isDark, onMenuClick }) => {
 
         <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded bg-purple-600 flex items-center justify-center text-white font-bold text-lg">H</div>
-            <span className="text-lg font-bold tracking-wide text-white">HANAXIA</span>
+            <span className="text-lg font-bold tracking-wide text-gray-900 dark:text-white">HANAXIA</span>
         </div>
       </div>
       
       <div className="flex items-center gap-2">
-         <button className="p-2 text-gray-400 hover:text-white rounded-full hover:bg-white/10 transition-colors" title="Export/Download">
+         <button className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors" title="Export/Download">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
@@ -36,7 +36,7 @@ const TopBar: React.FC<TopBarProps> = ({ onToggle, isDark, onMenuClick }) => {
         <button
           aria-label="Toggle theme"
           onClick={onToggle}
-          className="p-2 text-gray-400 hover:text-white rounded-full hover:bg-white/10 transition-colors"
+          className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
         >
           {isDark ? ICONS.sun : ICONS.moon}
         </button>

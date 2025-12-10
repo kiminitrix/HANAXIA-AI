@@ -59,11 +59,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading, activeConversa
     <div className="max-w-3xl mx-auto w-full px-4 mb-6">
       <form 
         onSubmit={handleSubmit} 
-        className="relative bg-[#1a1a1a] rounded-3xl border border-white/10 shadow-xl flex items-end p-2 transition-colors focus-within:border-purple-500/50"
+        className="relative bg-white dark:bg-[#1a1a1a] rounded-3xl border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-xl flex items-end p-2 transition-colors focus-within:border-purple-500/50"
       >
         <button 
           type="button" 
-          className="p-3 text-gray-400 hover:text-white transition-colors"
+          className="p-3 text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -77,7 +77,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading, activeConversa
           onKeyDown={handleKeyDown}
           placeholder="Message Hanaxia..."
           rows={1}
-          className="flex-1 bg-transparent py-3.5 px-2 outline-none text-gray-100 placeholder-gray-500 resize-none max-h-[150px] overflow-y-auto custom-scrollbar"
+          className="flex-1 bg-transparent py-3.5 px-2 outline-none text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 resize-none max-h-[150px] overflow-y-auto custom-scrollbar"
           disabled={isLoading}
         />
 
@@ -85,7 +85,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading, activeConversa
           type="submit" 
           disabled={!text.trim() || isLoading}
           className={`p-2 rounded-full mb-1 transition-all ${
-             text.trim() && !isLoading ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/10 text-gray-500'
+             text.trim() && !isLoading ? 'bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200' : 'bg-gray-200 dark:bg-white/10 text-gray-400 dark:text-gray-500'
           }`}
         >
           {isLoading ? (
@@ -243,24 +243,24 @@ const HanaxiaChat: React.FC = () => {
                   <div 
                     className={`max-w-[90%] md:max-w-[85%] px-5 py-4 rounded-2xl text-[15px] leading-7 ${
                       m.role === 'user' 
-                        ? 'bg-white/10 text-white rounded-br-none' 
-                        : 'text-gray-200'
+                        ? 'bg-purple-600 text-white rounded-br-none dark:bg-white/10 dark:text-white' 
+                        : 'text-gray-800 dark:text-gray-200'
                     }`}
                   >
                     {m.role === 'assistant' ? (
-                       <div className="prose dark:prose-invert prose-sm max-w-none">
+                       <div className="prose prose-slate dark:prose-invert prose-sm max-w-none">
                         <ReactMarkdown 
                            remarkPlugins={[remarkGfm]}
                            rehypePlugins={[rehypeHighlight]}
                            components={{
-                             a: ({node, ...props}) => <a target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline" {...props} />,
+                             a: ({node, ...props}) => <a target="_blank" rel="noopener noreferrer" className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300 underline" {...props} />,
                              code: ({node, className, children, ...props}) => {
                                const match = /language-(\w+)/.exec(className || '');
                                const isInline = !match && !className?.includes('hljs');
-                               if (isInline) return <code className="bg-white/10 rounded px-1.5 py-0.5 text-xs font-mono" {...props}>{children}</code>;
+                               if (isInline) return <code className="bg-gray-100 dark:bg-white/10 rounded px-1.5 py-0.5 text-xs font-mono" {...props}>{children}</code>;
                                return <code className={className} {...props}>{children}</code>;
                              },
-                             pre: ({node, ...props}) => <pre className="bg-[#1e1e1e] p-4 rounded-xl border border-white/5 overflow-x-auto" {...props} />
+                             pre: ({node, ...props}) => <pre className="bg-gray-900 dark:bg-[#1e1e1e] text-white p-4 rounded-xl border border-gray-200 dark:border-white/5 overflow-x-auto" {...props} />
                            }}
                         >
                           {m.text}

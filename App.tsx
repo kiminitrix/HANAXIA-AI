@@ -75,7 +75,7 @@ export default function App() {
         />
         
         {/* Main Content - Full width/height, scrollable internally */}
-        <main className="flex-1 relative w-full h-full overflow-hidden bg-[#0a0a0a] dark:bg-[#050505]">
+        <main className="flex-1 relative w-full h-full overflow-hidden bg-transparent">
             {/* Subtle Grid Background */}
              <div 
               className="absolute inset-0 pointer-events-none opacity-[0.03]"
