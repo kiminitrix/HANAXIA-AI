@@ -27,6 +27,13 @@ const DocParser: React.FC = () => {
     return unsubscribe;
   }, []);
 
+  // Clear parsed text when files change to ensure result consistency
+  useEffect(() => {
+    if (parsedText && !isProcessing) {
+      setParsedText(null);
+    }
+  }, [files]);
+
   // Handle File Preview for Markdown
   useEffect(() => {
     const loadPreviews = async () => {
@@ -104,9 +111,8 @@ const DocParser: React.FC = () => {
 
   const removeFile = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
-    if (files.length === 1) {
+    if (files.length === 1) { // Will become 0
        setError(null);
-       setParsedText(null);
     }
   };
 
@@ -158,7 +164,8 @@ const DocParser: React.FC = () => {
   const readFileContent = (file: File): Promise<{ content: string; mimeType: string }> => {
     return new Promise((resolve, reject) => {
       const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-      const isImage = file.type.startsWith('image/');
+      // Enhanced detection for images in case file.type is missing
+      const isImage = file.type.startsWith('image/') || /\.(jpg|jpeg|png|webp|heic|bmp)$/i.test(file.name);
       
       const reader = new FileReader();
       
@@ -166,8 +173,17 @@ const DocParser: React.FC = () => {
         reader.readAsDataURL(file);
         reader.onload = () => {
           const result = reader.result as string;
-          const base64 = result.split(',')[1];
-          resolve({ content: base64, mimeType: file.type || (isPdf ? 'application/pdf' : 'image/jpeg') });
+          // Robustly handle data URI format
+          const base64 = result.includes(',') ? result.split(',')[1] : result;
+          
+          let mimeType = file.type;
+          // Fallback if browser didn't detect type
+          if (!mimeType) {
+             if (isPdf) mimeType = 'application/pdf';
+             else if (isImage) mimeType = 'image/jpeg'; // Fallback to jpeg
+          }
+
+          resolve({ content: base64, mimeType });
         };
       } else {
         reader.readAsText(file);
@@ -392,7 +408,7 @@ const DocParser: React.FC = () => {
                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
                      </svg>
-                     Copy Text
+                     Copy
                    </>
                 )}
               </button>
