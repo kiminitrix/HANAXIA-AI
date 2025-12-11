@@ -3,6 +3,9 @@ import { Goal, AgentTemplate, SocketEvents, SocketPayloads } from '../types';
 import { ICONS } from '../constants';
 import { runAgenticPlan } from '../services/geminiService';
 import { wsService } from '../services/websocketService';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
 
 const AgenticPlanner: React.FC = () => {
   const [goals, setGoals] = useState<Goal[]>(() => {
@@ -358,8 +361,22 @@ const AgenticPlanner: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
-                      {goal.plan}
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <ReactMarkdown 
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeHighlight]}
+                        components={{
+                          pre: ({node, ...props}) => <pre className="bg-gray-50 dark:bg-black/50 p-3 rounded-lg overflow-x-auto" {...props} />,
+                          code: ({node, className, children, ...props}) => {
+                            const match = /language-(\w+)/.exec(className || '');
+                            const isInline = !match && !className?.includes('hljs');
+                            if (isInline) return <code className="bg-gray-100 dark:bg-white/10 px-1 py-0.5 rounded text-xs font-mono text-pink-500" {...props}>{children}</code>;
+                            return <code className={className} {...props}>{children}</code>;
+                          }
+                        }}
+                      >
+                        {goal.plan}
+                      </ReactMarkdown>
                     </div>
                   )}
                 </div>
