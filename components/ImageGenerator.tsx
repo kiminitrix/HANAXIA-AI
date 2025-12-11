@@ -129,8 +129,15 @@ const ImageGenerator: React.FC = () => {
             {!isLoading && images.length > 0 && (
                <div className="flex flex-wrap justify-center items-center gap-8 w-full">
                   {images.map((src, i) => (
-                    <div key={i} className="group relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-black max-w-[450px] w-full aspect-square transition-transform hover:scale-[1.02]">
-                      <img src={src} alt={`Generated ${i}`} className="w-full h-full object-cover" />
+                    <div 
+                      key={i} 
+                      className="group relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-black w-fit max-w-full max-h-[70vh] transition-transform hover:scale-[1.02] flex items-center justify-center"
+                    >
+                      <img 
+                        src={src} 
+                        alt={`Generated ${i}`} 
+                        className="max-w-full max-h-[70vh] w-auto h-auto object-contain" 
+                      />
                       
                       {/* Action Overlay */}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4 backdrop-blur-[2px]">

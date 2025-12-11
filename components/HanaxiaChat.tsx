@@ -129,10 +129,13 @@ const HanaxiaChat: React.FC<HanaxiaChatProps> = ({ activeConversation, onUpdateC
     setIsStreaming(true);
 
     try {
-      const history = updatedWithUser.messages.map(m => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.text }]
-      }));
+      // Use activeConversation.messages (previous state) to avoid duplicating the new user message in history
+      const history = activeConversation.messages
+        .filter(m => m.role !== 'system')
+        .map(m => ({
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: m.text }]
+        }));
 
       const stream = await streamChatResponse(history, userMsg.text);
       
@@ -202,14 +205,14 @@ const HanaxiaChat: React.FC<HanaxiaChatProps> = ({ activeConversation, onUpdateC
               {activeConversation.messages.map((m) => (
                 <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div 
-                    className={`max-w-[90%] md:max-w-[85%] px-5 py-4 rounded-2xl text-[15px] leading-7 shadow-sm ${
+                    className={`max-w-[90%] md:max-w-[80%] px-6 py-5 rounded-2xl text-base leading-relaxed shadow-sm ${
                       m.role === 'user' 
                         ? 'bg-purple-600 text-white rounded-br-none dark:bg-white/10 dark:text-white' 
                         : 'bg-white dark:bg-[#1a1a1a] text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-white/5'
                     }`}
                   >
                     {m.role === 'assistant' ? (
-                       <div className="prose prose-slate dark:prose-invert prose-sm max-w-none">
+                       <div className="prose prose-slate dark:prose-invert max-w-none">
                         <ReactMarkdown 
                            remarkPlugins={[remarkGfm]}
                            rehypePlugins={[rehypeHighlight]}

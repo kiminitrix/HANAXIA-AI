@@ -26,20 +26,34 @@ export const parseDocument = async (
 ): Promise<string> => {
   const ai = getClient();
   // Using flash for fast document understanding
+  
+  const parts: any[] = [];
+  
+  // Handle binary vs text data
+  // PDF and Images go to inlineData. Text files go to text part.
+  const isBinary = mimeType === 'application/pdf' || mimeType.startsWith('image/');
+
+  if (isBinary) {
+    parts.push({
+      inlineData: {
+        mimeType: mimeType,
+        data: fileData,
+      },
+    });
+    parts.push({
+      text: `Analyze this document (${fileName}). Provide a comprehensive summary and extract key metadata in a structured format.`,
+    });
+  } else {
+    // Treat as text content
+    parts.push({
+      text: `Analyze the following document content (${fileName}):\n\n${fileData}\n\nProvide a comprehensive summary and extract key metadata in a structured format.`,
+    });
+  }
+
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: {
-      parts: [
-        {
-          inlineData: {
-            mimeType: mimeType,
-            data: fileData,
-          },
-        },
-        {
-          text: `Analyze this document (${fileName}). Provide a comprehensive summary and extract key metadata in a structured format.`,
-        },
-      ],
+      parts: parts,
     },
   });
   return response.text || "Could not parse document.";
