@@ -1,8 +1,18 @@
+export interface Attachment {
+  id: string;
+  type: 'image' | 'audio' | 'video' | 'file';
+  mimeType: string;
+  data: string; // base64
+  name: string;
+  size: number;
+}
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant' | 'system';
   text: string;
   time: number;
+  attachments?: Attachment[];
 }
 
 export interface Conversation {

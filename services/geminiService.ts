@@ -1,22 +1,51 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+import { Attachment } from "../types";
 
 // Helper to get client instance - recreated to ensure fresh key if needed
 const getClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const streamChatResponse = async (
-  history: { role: string; parts: { text: string }[] }[],
-  newMessage: string
+  history: { role: string; parts: { text?: string; inlineData?: { mimeType: string; data: string } }[] }[],
+  newMessage: string,
+  attachments: Attachment[] = []
 ) => {
   const ai = getClient();
+  
+  // Create chat with history
   const chat = ai.chats.create({
     model: 'gemini-2.5-flash',
     history: history,
     config: {
-      systemInstruction: 'You are Hanaxia, a helpful, professional, and intelligent AI assistant used in a corporate environment.',
+      systemInstruction: 'You are Hanaxia, a helpful, professional, and intelligent AI assistant used in a corporate environment. You can analyze images, audio, PDFs, and other documents provided by the user.',
     }
   });
 
-  return await chat.sendMessageStream({ message: newMessage });
+  // Construct current message parts
+  const parts: any[] = [];
+  
+  // Add attachments first (multimodal context)
+  if (attachments && attachments.length > 0) {
+    attachments.forEach(att => {
+      parts.push({
+        inlineData: {
+          mimeType: att.mimeType,
+          data: att.data
+        }
+      });
+    });
+  }
+
+  // Add text prompt
+  if (newMessage) {
+    parts.push({ text: newMessage });
+  }
+
+  // If both are empty (rare edge case), send a placeholder to avoid API error
+  if (parts.length === 0) {
+    parts.push({ text: "..." });
+  }
+
+  return await chat.sendMessageStream({ message: { parts } });
 };
 
 export const parseDocument = async (
