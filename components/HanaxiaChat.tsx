@@ -327,13 +327,13 @@ const HanaxiaChat: React.FC<HanaxiaChatProps> = ({ activeConversation, onUpdateC
       <div className="flex-1 overflow-y-auto w-full custom-scrollbar" ref={scrollRef}>
         <div className="max-w-3xl mx-auto w-full px-4 pt-10 pb-4">
           {activeConversation.messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] animate-fade-in select-none">
+            <div className="flex flex-col items-center justify-center min-h-[50vh] animate-fade-in select-none px-4">
                {/* Logo Center */}
                <div className="w-20 h-20 bg-purple-600 rounded-2xl flex items-center justify-center text-white text-5xl font-bold mb-8 shadow-2xl shadow-purple-900/50">
                   H
                </div>
                <div className="text-center space-y-2">
-                 <h1 className="text-lg font-medium tracking-[0.2em] text-gray-500 uppercase">Hanaxia Neural Interface</h1>
+                 <h1 className="text-lg font-medium tracking-[0.2em] text-gray-500 uppercase">ASSALAMMUALAIKUM! I'M HANAXIA</h1>
                </div>
             </div>
           ) : (
