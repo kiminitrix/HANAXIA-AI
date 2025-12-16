@@ -197,7 +197,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               </div>
               <div>
                  <div className="text-sm font-medium text-gray-900 dark:text-white">Master Kimi</div>
-                 <div className="text-xs text-purple-600 dark:text-purple-400">Pro Plan</div>
+                 <div className="text-xs text-purple-600 dark:text-purple-400">Master Plan</div>
               </div>
            </div>
         </div>
