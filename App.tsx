@@ -159,6 +159,7 @@ export default function App() {
           <HanaxiaChat 
              activeConversation={conversations.find(c => c.id === activeId) || conversations[0]}
              onUpdateConversation={handleUpdateConversation}
+             onAutoRename={handleRenameChat}
           />
         );
       case AppRoute.DOC: return <DocParser />;
@@ -166,7 +167,7 @@ export default function App() {
       case AppRoute.CALENDAR: return <CalendarPlanner />;
       case AppRoute.IMAGE: return <ImageGenerator />;
       case AppRoute.VIDEO: return <VideoGenerator />;
-      default: return <HanaxiaChat activeConversation={conversations[0]} onUpdateConversation={handleUpdateConversation} />;
+      default: return <HanaxiaChat activeConversation={conversations[0]} onUpdateConversation={handleUpdateConversation} onAutoRename={handleRenameChat} />;
     }
   };
 

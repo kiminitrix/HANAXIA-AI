@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Conversation, Message, SocketEvents, SocketPayloads, Attachment } from '../types';
-import { streamChatResponse } from '../services/geminiService';
+import { streamChatResponse, generateChatTitle } from '../services/geminiService';
 import { wsService } from '../services/websocketService';
 import { GenerateContentResponse } from "@google/genai";
 import ReactMarkdown from 'react-markdown';
@@ -214,9 +214,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading, activeConversa
 interface HanaxiaChatProps {
   activeConversation: Conversation;
   onUpdateConversation: (c: Conversation) => void;
+  onAutoRename?: (id: string, title: string) => void;
 }
 
-const HanaxiaChat: React.FC<HanaxiaChatProps> = ({ activeConversation, onUpdateConversation }) => {
+const HanaxiaChat: React.FC<HanaxiaChatProps> = ({ activeConversation, onUpdateConversation, onAutoRename }) => {
   const [isStreaming, setIsStreaming] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -228,6 +229,8 @@ const HanaxiaChat: React.FC<HanaxiaChatProps> = ({ activeConversation, onUpdateC
 
   const handleSendMessage = async (text: string, attachments: Attachment[]) => {
     if ((!text.trim() && attachments.length === 0) || isStreaming) return;
+
+    const isNewConversation = activeConversation.messages.length === 0;
 
     const userMsg: Message = { 
       id: generateId(), 
@@ -246,6 +249,13 @@ const HanaxiaChat: React.FC<HanaxiaChatProps> = ({ activeConversation, onUpdateC
       conversationTitle: activeConversation.title,
       message: userMsg
     });
+
+    // Auto-rename if first message and text exists
+    if (isNewConversation && text.trim() && onAutoRename) {
+      generateChatTitle(text).then(title => {
+         onAutoRename(activeConversation.id, title);
+      }).catch(err => console.error("Auto-rename failed", err));
+    }
 
     setIsStreaming(true);
 

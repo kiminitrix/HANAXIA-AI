@@ -209,3 +209,17 @@ export const generateVideo = async (
     return { uri: '', error: error.message || "Failed to generate video" };
   }
 };
+
+export const generateChatTitle = async (firstMessage: string): Promise<string> => {
+  if (!firstMessage) return "New Chat";
+  const ai = getClient();
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: `Generate a short, concise title (maximum 5 words) for a conversation that starts with this user message: "${firstMessage}". Return ONLY the title text. Do not use quotes or prefixes.`,
+    });
+    return response.text?.trim() || "New Chat";
+  } catch (e) {
+    return "New Chat";
+  }
+};
