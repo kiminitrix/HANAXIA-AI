@@ -1,5 +1,7 @@
 {
   "name": "HANAXIA AI",
   "description": "A comprehensive AI Agent Platform featuring Chat, Document Parsing, Agentic Planning, and Media Generation.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "microphone"
+  ]
 }
