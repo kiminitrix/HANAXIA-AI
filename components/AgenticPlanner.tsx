@@ -135,18 +135,23 @@ const AgenticPlanner: React.FC = () => {
 
   // Template Management
   const handleSaveTemplate = () => {
-    if (!newGoalTitle && !newGoalText) return;
-    const name = prompt("Enter a name for this template:", newGoalTitle || "New Template");
-    if (!name) return;
+    if (!newGoalTitle.trim() && !newGoalText.trim()) return;
+    
+    const suggestedName = newGoalTitle.trim() || "New Template";
+    const name = prompt("Enter a name for this new template:", suggestedName);
+    
+    if (!name || !name.trim()) return;
 
     const newTemplate: AgentTemplate = {
       id: Date.now().toString(),
-      name,
-      title: newGoalTitle,
-      text: newGoalText
+      name: name.trim(),
+      title: newGoalTitle.trim(),
+      text: newGoalText.trim()
     };
+    
     setTemplates(prev => [...prev, newTemplate]);
     setSelectedTemplateId(newTemplate.id);
+    alert(`Template "${name.trim()}" saved successfully.`);
   };
 
   const handleUpdateTemplate = () => {
@@ -156,7 +161,7 @@ const AgenticPlanner: React.FC = () => {
         ? { ...t, title: newGoalTitle, text: newGoalText } 
         : t
     ));
-    alert("Template updated successfully.");
+    alert("Existing template updated successfully.");
   };
 
   const handleRenameTemplate = () => {
@@ -197,9 +202,6 @@ const AgenticPlanner: React.FC = () => {
   };
 
   return (
-    // Main Container: 
-    // - Mobile: Stacked, overflow-y-auto on parent (App.tsx is h-full hidden, so we need auto here)
-    // - Desktop: Side-by-side, container hidden, internal panes scroll
     <div className="h-full w-full flex flex-col lg:flex-row gap-6 p-6 overflow-y-auto lg:overflow-hidden">
       
       {/* Creation Panel */}
@@ -232,8 +234,9 @@ const AgenticPlanner: React.FC = () => {
                    <button 
                      onClick={handleUpdateTemplate}
                      className="flex-1 px-2 py-1.5 text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+                     title="Update the currently selected template"
                    >
-                     Update Content
+                     Overwrite
                    </button>
                    <button 
                      onClick={handleRenameTemplate}
@@ -273,20 +276,23 @@ const AgenticPlanner: React.FC = () => {
             <div className="flex flex-col gap-2 pt-2">
               <button 
                 onClick={addGoal}
-                className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium shadow-lg shadow-purple-500/20 hover:scale-[1.02] transition-transform"
+                disabled={!newGoalTitle.trim() || !newGoalText.trim()}
+                className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium shadow-lg shadow-purple-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100"
               >
                 Create Agent Mission
               </button>
               
-              {!selectedTemplateId && (
-                <button 
-                  onClick={handleSaveTemplate}
-                  disabled={!newGoalTitle && !newGoalText}
-                  className="w-full py-2 text-sm text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/40 rounded-lg transition-colors disabled:opacity-50"
-                >
-                  Save as New Template
-                </button>
-              )}
+              <button 
+                onClick={handleSaveTemplate}
+                disabled={!newGoalTitle.trim() && !newGoalText.trim()}
+                className="w-full py-2.5 text-sm font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-900/40 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                title="Save this goal as a new reusable template"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Save as New Template
+              </button>
             </div>
           </div>
         </div>

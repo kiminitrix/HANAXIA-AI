@@ -10,6 +10,50 @@ import rehypeHighlight from 'rehype-highlight';
 // Helper for collision-free IDs
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
+// --- Message Copy Component ---
+
+const CopyButton: React.FC<{ text: string, role: string }> = ({ text, role }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const isUser = role === 'user';
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={`
+        absolute top-2 right-2 z-10 p-1.5 rounded-lg transition-all duration-200 
+        opacity-0 group-hover:opacity-100 focus:opacity-100
+        ${isUser 
+          ? 'bg-white/10 hover:bg-white/20 text-white/70 hover:text-white border border-white/10' 
+          : 'bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-white/5'
+        }
+      `}
+      title="Copy message"
+    >
+      {copied ? (
+        <div className="flex items-center gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-green-500">
+            <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+          </svg>
+          <span className={`text-[10px] font-bold uppercase tracking-tighter ${isUser ? 'text-white' : 'text-green-600 dark:text-green-500'}`}>Copied!</span>
+        </div>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
+        </svg>
+      )}
+    </button>
+  );
+};
+
 // --- Chat Input Component ---
 
 interface ChatInputProps {
@@ -382,15 +426,18 @@ const HanaxiaChat: React.FC<HanaxiaChatProps> = ({ activeConversation, onUpdateC
                       </div>
                     )}
 
-                    {/* Text Message */}
+                    {/* Text Message with Copy Button */}
                     {m.text && (
                       <div 
-                        className={`px-6 py-5 rounded-2xl text-base leading-relaxed shadow-sm w-full ${
+                        className={`group relative px-6 py-5 rounded-2xl text-base leading-relaxed shadow-sm w-full ${
                           m.role === 'user' 
                             ? 'bg-purple-600 text-white rounded-br-none dark:bg-white/10 dark:text-white' 
                             : 'bg-white dark:bg-[#1a1a1a] text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-white/5'
                         }`}
                       >
+                        {/* Copy Button (Only if text exists) */}
+                        {m.text !== '' && <CopyButton text={m.text} role={m.role} />}
+
                         {m.role === 'assistant' ? (
                           <div className="prose prose-slate dark:prose-invert max-w-none">
                             <ReactMarkdown 
