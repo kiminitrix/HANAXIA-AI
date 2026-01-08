@@ -119,8 +119,23 @@ const MessageItem: React.FC<{ message: Message }> = ({ message }) => {
   const isAssistant = message.role === 'assistant';
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-fade-in`}>
-      <div className={`flex flex-col gap-2 max-w-[90%] md:max-w-[85%] ${isUser ? 'items-end' : 'items-start'}`}>
+    <div className={`flex gap-3 md:gap-4 ${isUser ? 'flex-row-reverse' : 'flex-row'} animate-fade-in`}>
+      {/* Avatar Container */}
+      <div className="flex-shrink-0 mt-1">
+        {isAssistant ? (
+          <div className="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center text-white text-sm font-bold shadow-md">
+            H
+          </div>
+        ) : (
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center text-white shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+              <path d="M2 19V17H22V19H2ZM2 15L3.5 6L8 10.5L12 4L16 10.5L20.5 6L22 15H2Z" />
+            </svg>
+          </div>
+        )}
+      </div>
+
+      <div className={`flex flex-col gap-2 max-w-[85%] md:max-w-[80%] ${isUser ? 'items-end' : 'items-start'}`}>
         
         {/* Attachments Display */}
         {message.attachments && message.attachments.length > 0 && (
@@ -157,8 +172,8 @@ const MessageItem: React.FC<{ message: Message }> = ({ message }) => {
           <div 
             className={`group relative px-6 py-4 rounded-2xl text-base leading-relaxed shadow-sm w-full transition-all ${
               isUser 
-                ? 'bg-purple-600 text-white rounded-br-none dark:bg-white/10 dark:text-gray-100' 
-                : 'bg-white dark:bg-[#1a1a1a] text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-white/5'
+                ? 'bg-purple-600 text-white rounded-tr-none dark:bg-white/10 dark:text-gray-100' 
+                : 'bg-white dark:bg-[#1a1a1a] text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-white/5 rounded-tl-none'
             }`}
           >
             {/* Contextual Copy Button */}
@@ -654,8 +669,11 @@ const HanaxiaChat: React.FC<HanaxiaChatProps> = ({ activeConversation, onUpdateC
           {activeConversation.messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center min-h-[50vh] animate-fade-in select-none px-4">
                {/* Logo Center */}
-               <div className="w-20 h-20 bg-purple-600 rounded-2xl flex items-center justify-center text-white text-5xl font-bold mb-8 shadow-2xl shadow-purple-900/50">
-                  H
+               <div className="w-20 h-20 bg-purple-600 rounded-2xl flex items-center justify-center text-white mb-8 shadow-2xl shadow-purple-900/50 relative">
+                  <div className="absolute inset-0 bg-white/20 blur-xl rounded-full scale-150 opacity-50 animate-pulse"></div>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-12 h-12 relative z-10">
+                    <path d="M2 19V17H22V19H2ZM2 15L3.5 6L8 10.5L12 4L16 10.5L20.5 6L22 15H2Z" />
+                  </svg>
                </div>
                <div className="text-center space-y-2">
                  <h1 className="text-lg font-medium tracking-[0.2em] text-gray-500 uppercase">ASSALAMMUALAIKUM! I'M HANAXIA</h1>
