@@ -7,6 +7,7 @@ interface SidebarProps {
   setRoute: (route: AppRoute) => void;
   isOpen: boolean;
   onClose: () => void;
+  onLogout: () => void;
   
   // Chat props
   conversations: Conversation[];
@@ -19,7 +20,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
-  route, setRoute, isOpen, onClose,
+  route, setRoute, isOpen, onClose, onLogout,
   conversations, activeId, onSelectChat, onNewSession, onDeleteChat, onRenameChat, onClearHistory
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -68,7 +69,11 @@ const Sidebar: React.FC<SidebarProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-white/5">
            <div className="flex items-center gap-3">
-             <div className="w-8 h-8 rounded bg-purple-600 flex items-center justify-center text-white font-bold">H</div>
+             <div className="w-8 h-8 rounded bg-purple-600 flex items-center justify-center text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                  <path d="M2 19V17H22V19H2ZM2 15L3.5 6L8 10.5L12 4L16 10.5L20.5 6L22 15H2Z" />
+                </svg>
+             </div>
              <span className="font-bold text-lg tracking-wide text-gray-900 dark:text-white">HANAXIA</span>
            </div>
            <button onClick={onClose} className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white md:hidden">
@@ -194,14 +199,28 @@ const Sidebar: React.FC<SidebarProps> = ({
         
         {/* User Profile */}
         <div className="p-4 border-t border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#0a0a0c]">
-           <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
-                 MK
+           <div className="flex items-center justify-between">
+              <div 
+                className="flex items-center gap-3 cursor-pointer group"
+                onClick={() => { setRoute(AppRoute.PROFILE); onClose(); }}
+              >
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-105 transition-transform">
+                  MK
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Master Kimi</div>
+                  <div className="text-xs text-purple-600 dark:text-purple-400">Master Plan</div>
+                </div>
               </div>
-              <div>
-                 <div className="text-sm font-medium text-gray-900 dark:text-white">Master Kimi</div>
-                 <div className="text-xs text-purple-600 dark:text-purple-400">Master Plan</div>
-              </div>
+              <button 
+                onClick={(e) => { e.stopPropagation(); onLogout(); }}
+                className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10"
+                title="Logout"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                </svg>
+              </button>
            </div>
         </div>
       </aside>

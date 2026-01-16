@@ -60,7 +60,10 @@ export enum AppRoute {
   CALENDAR = 'calendar',
   IMAGE = 'image',
   VIDEO = 'video',
+  PROFILE = 'profile'
 }
+
+export type AuthState = 'LOGIN' | 'REGISTER' | 'FORGOT_PASSWORD' | 'LOGOUT_TRANSITION' | 'AUTHENTICATED';
 
 export enum SocketEvents {
   CHAT_MESSAGE = 'CHAT_MESSAGE',

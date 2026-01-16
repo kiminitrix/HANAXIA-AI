@@ -7,7 +7,10 @@ import AgenticPlanner from './components/AgenticPlanner';
 import CalendarPlanner from './components/CalendarPlanner';
 import ImageGenerator from './components/ImageGenerator';
 import VideoGenerator from './components/VideoGenerator';
-import { AppRoute, Conversation, SocketEvents, SocketPayloads } from './types';
+import ControlPanel from './components/ControlPanel';
+import Auth from './components/Auth';
+import LogoutPage from './components/LogoutPage';
+import { AppRoute, Conversation, SocketEvents, SocketPayloads, AuthState } from './types';
 import { wsService } from './services/websocketService';
 
 // Theme hook
@@ -34,14 +37,19 @@ export default function App() {
   const { dark, toggle } = useTheme();
   const [route, setRoute] = useState<AppRoute>(AppRoute.CHAT);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  // Auth state
+  const [authState, setAuthState] = useState<AuthState>(() => {
+    const saved = localStorage.getItem('hanaxia-auth');
+    return (saved === 'true') ? 'AUTHENTICATED' : 'LOGIN';
+  });
 
-  // --- Chat State Management (Lifted from HanaxiaChat) ---
+  // --- Chat State Management ---
   const [conversations, setConversations] = useState<Conversation[]>(() => {
     const raw = localStorage.getItem('hanaxia-chats');
     return raw ? JSON.parse(raw) : [{ id: 'init-chat', title: 'New Chat', messages: [] }];
   });
   const [activeId, setActiveId] = useState<string>(() => {
-     // Ensure activeId is valid
      const raw = localStorage.getItem('hanaxia-chats');
      const parsed = raw ? JSON.parse(raw) : [{ id: 'init-chat' }];
      return parsed[0]?.id || 'init-chat';
@@ -52,10 +60,16 @@ export default function App() {
     localStorage.setItem('hanaxia-chats', JSON.stringify(conversations));
   }, [conversations]);
 
-  // Subscribe to real-time chat updates at App level so we catch messages even if not on Chat route
+  // Handle Auth Persistence
   useEffect(() => {
-    wsService.connect();
+    localStorage.setItem('hanaxia-auth', (authState === 'AUTHENTICATED').toString());
+  }, [authState]);
+
+  // Subscribe to real-time chat updates
+  useEffect(() => {
+    if (authState !== 'AUTHENTICATED') return;
     
+    wsService.connect();
     const unsubscribe = wsService.subscribe(
       SocketEvents.CHAT_MESSAGE, 
       (payload: SocketPayloads[SocketEvents.CHAT_MESSAGE]) => {
@@ -83,9 +97,20 @@ export default function App() {
       }
     );
     return unsubscribe;
-  }, []);
+  }, [authState]);
 
   // --- Handlers ---
+
+  const handleLogin = () => {
+    setAuthState('AUTHENTICATED');
+  };
+
+  const handleLogout = () => {
+    setAuthState('LOGOUT_TRANSITION');
+    setTimeout(() => {
+      setAuthState('LOGIN');
+    }, 2000); // Show logout screen for 2 seconds as requested
+  };
 
   const handleCreateNewSession = () => {
     const newId = `${Date.now()}`;
@@ -100,32 +125,13 @@ export default function App() {
     setConversations(prev => {
       const filtered = prev.filter(c => c.id !== id);
       if (filtered.length === 0) {
-        // Always keep at least one chat
         const newId = `${Date.now()}`;
         return [{ id: newId, title: 'New Chat', messages: [] }];
       }
       return filtered;
     });
-    
-    // If we deleted the active chat, switch to the first available
-    if (activeId === id) {
-       setConversations(currentChats => {
-          // This runs after the state update above would apply, but inside the same render cycle logic
-          // safely grabbing the first one from the filtered list we just calculated conceptually
-          const filtered = currentChats.filter(c => c.id !== id);
-          if (filtered.length > 0) {
-             setActiveId(filtered[0].id);
-          } else {
-             // Fallback if we just created a new one in the prev setter
-             // We can't easily access the new ID here without refactoring.
-             // Simpler approach: useEffect to fix activeId if invalid.
-          }
-          return currentChats; // return unchanged, just used for logic
-       });
-    }
   };
 
-  // Fix activeId if it points to a non-existent chat (e.g. after delete)
   useEffect(() => {
      if (!conversations.find(c => c.id === activeId)) {
         if (conversations.length > 0) {
@@ -133,7 +139,6 @@ export default function App() {
         }
      }
   }, [conversations, activeId]);
-
 
   const handleRenameChat = (id: string, newTitle: string) => {
     setConversations(prev => prev.map(c => c.id === id ? { ...c, title: newTitle } : c));
@@ -167,14 +172,24 @@ export default function App() {
       case AppRoute.CALENDAR: return <CalendarPlanner />;
       case AppRoute.IMAGE: return <ImageGenerator />;
       case AppRoute.VIDEO: return <VideoGenerator />;
+      case AppRoute.PROFILE: return <ControlPanel />;
       default: return <HanaxiaChat activeConversation={conversations[0]} onUpdateConversation={handleUpdateConversation} onAutoRename={handleRenameChat} />;
     }
   };
 
+  // Main screen routing
+  if (authState === 'LOGOUT_TRANSITION') {
+    return <LogoutPage />;
+  }
+
+  if (authState !== 'AUTHENTICATED') {
+    return <Auth onLogin={handleLogin} authState={authState} setAuthState={setAuthState} />;
+  }
+
   return (
     <div className={`h-screen flex flex-col overflow-hidden transition-colors duration-300 ${dark ? 'bg-[#0a0a0a] text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
       
-      {/* Top Bar - Fixed height */}
+      {/* Top Bar */}
       <div className="flex-none z-20">
         <TopBar 
           onToggle={toggle} 
@@ -190,6 +205,7 @@ export default function App() {
           setRoute={setRoute} 
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
+          onLogout={handleLogout}
           // Chat Props
           conversations={conversations}
           activeId={activeId}
@@ -200,9 +216,8 @@ export default function App() {
           onClearHistory={handleClearHistory}
         />
         
-        {/* Main Content - Full width/height, scrollable internally */}
+        {/* Main Content */}
         <main className="flex-1 relative w-full h-full overflow-hidden bg-transparent">
-            {/* Subtle Grid Background */}
              <div 
               className="absolute inset-0 pointer-events-none opacity-[0.03]"
               style={{
